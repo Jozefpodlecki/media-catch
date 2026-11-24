@@ -1,0 +1,10 @@
+node_modules/
+.npm-cache/
+.dev-session/
+dist/
+web-ext-artifacts/
+*.log
+.preview-browser/
+artifacts/
+extension/
+.build/

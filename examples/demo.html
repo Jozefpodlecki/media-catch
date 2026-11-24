@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Blob download test</title>
+<h1>Blob download test</h1>
+<p>Click Create, then open the extension and download the discovered URL.</p>
+<button id="create">Create test blob</button>
+<button id="revoke">Revoke blob (test failure)</button>
+<button id="large">Create 11 MiB blob (auto-download test)</button>
+<button id="boundary">Create exactly 10 MiB (should skip)</button>
+<p>Enable watching in the extension before creating large blobs. The large blob URL is revoked immediately to check that capture retains the bytes.</p>
+<p><a id="link">Create a blob first</a></p>
+<script src="demo.js"></script>
+</html>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <title>Media Catch</title>
+  <path fill="#7541bd" stroke="#b893eb" stroke-width="3" d="M48 5C71 5 91 21 91 46S77 91 50 91 5 78 5 53C5 29 23 5 48 5Z"/>
+  <path fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" d="M48 25v34M34 46l14 14 14-14M27 67v7h42v-7"/>
+</svg>

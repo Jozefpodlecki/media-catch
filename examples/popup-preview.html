@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Popup styling preview</title>
+  <link rel="stylesheet" href="/examples/popup-preview.css">
+</head>
+<body>
+  <h1>Popup styling preview</h1>
+  <p>Uses the actual popup HTML, CSS, and JavaScript with mock browser responses. No files are downloaded.</p>
+  <p><a href="/preview-history.html">Open download history preview</a></p>
+  <form id="controls">
+    <label>Theme <select id="theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+    <label>State <select id="state"><option value="found">Found blob</option><option value="empty">No blobs</option><option value="loading">Loading (2 seconds)</option><option value="error">Scan error</option><option value="long">Long URL and error</option><option value="watching">Watching new blobs</option></select></label>
+    <label>Width <select id="width"><option value="392">392 px (popup)</option><option value="320">320 px (narrow)</option></select></label>
+    <button type="button" id="refresh">Reload preview</button>
+  </form>
+  <p>Check spacing, clipping, contrast, keyboard focus, and browser zoom. Click Try download to inspect its status message.</p>
+  <iframe id="popup" title="Extension popup preview" src="/preview-popup.html?theme=light&amp;state=found"></iframe>
+  <p id="preview-status" role="status"></p>
+  <script src="/examples/popup-preview.js"></script>
+</body>
+</html>

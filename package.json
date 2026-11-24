@@ -1,0 +1,37 @@
+{
+    "name": "media-catch",
+    "version": "1.1.0",
+    "private": true,
+    "license": "MIT",
+    "description": "Local blob capture, HLS discovery, and MP4 remuxing for Tor/Firefox",
+    "engines": {
+        "node": ">=20"
+    },
+    "scripts": {
+        "test": "node scripts/build.mjs && node --test tests/*.test.cjs tests/*.test.mjs",
+        "lint": "node scripts/build.mjs && web-ext lint --source-dir extension",
+        "build": "powershell -NoProfile -File scripts/Build-Extension.ps1",
+        "preview": "node scripts/build.mjs && node scripts/preview-popup.mjs",
+        "compile": "node scripts/build.mjs",
+        "typecheck": "tsc --noEmit",
+        "format": "prettier --write \"src/**/*.{ts,tsx,css,json,html}\" \"scripts/**/*.mjs\" \"tests/*.{cjs,mjs}\" \"examples/*.ts\" \"docs/**/*.md\" README.md package.json tsconfig.json .prettierrc.json",
+        "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json,html}\" \"scripts/**/*.mjs\" \"tests/*.{cjs,mjs}\" \"examples/*.ts\" \"docs/**/*.md\" README.md package.json tsconfig.json .prettierrc.json"
+    },
+    "devDependencies": {
+        "@tailwindcss/cli": "4.3.5",
+        "@types/firefox-webext-browser": "143.0.1",
+        "@types/react": "19.3.0",
+        "@types/react-dom": "19.3.0",
+        "esbuild": "0.28.2",
+        "prettier": "3.10.1",
+        "tailwindcss": "4.3.5",
+        "typescript": "7.0.2",
+        "web-ext": "10.8.0"
+    },
+    "dependencies": {
+        "@ffmpeg/core": "0.12.10",
+        "@ffmpeg/ffmpeg": "0.12.15",
+        "react": "19.3.1",
+        "react-dom": "19.3.1"
+    }
+}

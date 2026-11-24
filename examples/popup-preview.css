@@ -1,0 +1,8 @@
+:root { color-scheme: light; font: 15px system-ui, sans-serif; background: #ececf0; color: #202026; }
+body { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+h1 { font-size: 24px; }
+p { line-height: 1.5; }
+form { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin: 20px 0; }
+label { display: grid; gap: 5px; }
+select, button { font: inherit; padding: 7px; }
+iframe { display: block; box-sizing: content-box; width: 392px; max-width: 100%; height: 700px; border: 1px solid #888; background: white; }

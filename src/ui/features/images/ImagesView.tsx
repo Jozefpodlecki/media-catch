@@ -4,6 +4,7 @@ import { imageDraftUrl, imageTarget } from '../../state/images';
 import { useSource } from '../../app/SourceProvider';
 import { useBusy } from '../../app/TaskProvider';
 import { ImagePatterns } from './ImagePatterns';
+import { ImageThumbnail } from './ImageThumbnail';
 
 export function ImagesView() {
     const state = useImagesState();
@@ -192,6 +193,7 @@ export function ImagesView() {
                                 const number = state.page * 25 + index + 1;
                                 return (
                                     <article className="image-item" key={image.id}>
+                                        <ImageThumbnail image={image} />
                                         <label className="image-selection">
                                             <input
                                                 type="checkbox"

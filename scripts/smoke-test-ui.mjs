@@ -223,7 +223,9 @@ async function exercise() {
         await key(find('Video quality'), 'Escape');
         const navigate = async (url) => {
             const previous = frame.contentDocument;
-            frame.src = url;
+            if (frame.src === new URL(url, location.href).href)
+                frame.contentWindow.location.reload();
+            else frame.src = url;
             await wait(
                 () =>
                     frame.contentDocument !== previous &&
@@ -300,6 +302,16 @@ async function exercise() {
         );
         await click('Scan page images');
         await wait(() => inputNamed('Download URL for image 1'));
+        await wait(() => doc.querySelector('.image-thumbnail img')?.naturalWidth === 160);
+        check(
+            doc.querySelector('.image-thumbnail img').src.includes('/images/thumb/first.jpg'),
+            'Image scan renders a loaded thumbnail from the observed source',
+        );
+        await wait(() => doc.querySelector('[aria-label="Preview unavailable"]'));
+        check(
+            Boolean(doc.querySelector('[aria-label="Preview unavailable"]')),
+            'Failed thumbnails show an accessible fallback',
+        );
         check(
             inputNamed('Download URL for image 1').value.endsWith('first.jpg?secure=full-token'),
             'Image scan prefers the enclosing signed full-size link',
@@ -422,6 +434,115 @@ async function exercise() {
         check(
             imageBackground !== win.getComputedStyle(doc.querySelector('.panel')).backgroundColor,
             'Image controls render in both color themes',
+        );
+        await click('Site rules');
+        await wait(() => !find('New site rule').disabled && inputNamed('Rule name'));
+        check(
+            find('Arm site rules and run actions').disabled,
+            'Rules cannot arm without an enabled saved rule',
+        );
+        await edit(inputNamed('Rule name'), 'Save matching HLS');
+        await click('Save site rule');
+        await wait(() => find('Edit rule Save matching HLS'));
+        check(
+            !find('Arm site rules and run actions').disabled &&
+                doc.body.textContent.includes('Edit rule'),
+            'Saving a site rule acknowledges the editor and enables explicit arming',
+        );
+        await click('Preview site rules without downloading');
+        await wait(() => find('Disarm site rules'));
+        check(
+            doc.body.textContent.includes('Preview active'),
+            'Rule preview is distinct from executing actions',
+        );
+        await click('Disarm site rules');
+        await click('Arm site rules and run actions');
+        await wait(() => doc.body.textContent.includes('Rules armed'));
+        check(true, 'Site rules require a separate explicit arm action');
+        await click('Disarm site rules');
+        await edit(inputNamed('Rule name'), 'My unsaved edit');
+        await click('Images');
+        await click('Site rules');
+        check(
+            inputNamed('Rule name').value === 'My unsaved edit',
+            'Rule editor drafts survive view switches and polling',
+        );
+        frame.style.width = '200px';
+        await new Promise((resolve) => setTimeout(resolve, 80));
+        check(
+            doc.documentElement.scrollWidth <= doc.documentElement.clientWidth,
+            'Rules editor and six navigation tabs reflow at narrow width',
+        );
+        frame.style.width = '360px';
+        await click('Arm site rules and run actions');
+        await wait(() => find('Disarm site rules'));
+        await navigate('/preview-index.html?source=2#settings');
+        await click('Site rules');
+        await wait(() => find('Edit rule Save matching HLS') && find('Disarm site rules'));
+        check(
+            !!find('Disarm site rules'),
+            'Saved rules and the armed background session survive UI reopening',
+        );
+        await click('Delete rule Save matching HLS');
+        await wait(() => !find('Edit rule Save matching HLS'));
+        check(
+            find('Arm site rules and run actions').disabled,
+            'Deleting the last rule disables arming',
+        );
+        await click('Blobs');
+        const scanCountBeforeInternal = win.browser.runtime.previewCommands.filter(
+            (action) => action === 'scan',
+        ).length;
+        win.browser.tabs.previewNavigate('about:torconnect');
+        await wait(() =>
+            doc.body.textContent.includes('Browser and extension pages cannot be scanned.'),
+        );
+        check(
+            find('Start blob capture').matches(':disabled'),
+            'Tor connection pages disable blob capture',
+        );
+        check(
+            !doc.querySelector('[role="alert"]'),
+            'Unsupported pages show neutral feedback rather than a host-permission error',
+        );
+        check(
+            win.browser.runtime.previewCommands.filter((action) => action === 'scan').length ===
+                scanCountBeforeInternal,
+            'Internal-page navigation never sends an automatic scan',
+        );
+        await click('Images');
+        check(
+            find('Scan page images').matches(':disabled') &&
+                inputNamed('Find in image URLs').matches(':disabled'),
+            'Internal pages disable image capture and transformation controls',
+        );
+        await click('Media & HLS');
+        check(
+            find('Enable network detection').matches(':disabled') &&
+                find('Observe video and source elements').matches(':disabled'),
+            'Internal pages disable network and DOM monitoring controls',
+        );
+        await click('Site rules');
+        check(
+            find('Save site rule').matches(':disabled'),
+            'Internal pages cannot save source-specific rules',
+        );
+        await click('History');
+        check(
+            find('History').getAttribute('aria-selected') === 'true',
+            'History remains accessible on internal pages',
+        );
+        await click('Website settings');
+        check(
+            !inputNamed('Default capture threshold').matches(':disabled'),
+            'Global settings remain usable on internal pages',
+        );
+        win.browser.tabs.previewNavigate('https://example.com/returned');
+        await click('Blobs');
+        await wait(() => !find('Start blob capture').matches(':disabled'));
+        check(
+            !doc.body.textContent.includes('Browser and extension pages cannot be scanned.'),
+            'Capture automatically becomes available when the source returns to a website',
         );
         await fetch('/__report', {
             method: 'POST',

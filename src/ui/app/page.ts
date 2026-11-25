@@ -16,7 +16,7 @@ export function describePage(mode: string | undefined, search: string): PageDesc
 }
 export function initialViewForPage(page: PageDescriptor, hash: string): View {
     if (page.mode === 'history') return 'history';
-    if (['#blobs', '#images', '#media', '#history', '#settings'].includes(hash))
+    if (['#blobs', '#images', '#media', '#rules', '#history', '#settings'].includes(hash))
         return hash.slice(1) as View;
     return page.mode === 'dashboard' && page.sourceTabId === null ? 'settings' : 'blobs';
 }

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fixture 1: Image gallery</title>
+    <link rel="stylesheet" href="/fixtures/style.css" />
+    <h1>Fixture 1: Image gallery</h1>
+    <p>Scan this page in Images. Expect six unique references and six downloads.</p>
+    <main class="gallery">
+        <a href="/full/linked.png?secure=full-token"
+            ><span><img src="/thumb/linked.png?secure=thumb-token" alt="Nested link" /></span
+        ></a>
+        <img src="/thumb/plain.png?secure=unchanged-token" alt="Source only" />
+        <a href="/full/linked.png?secure=full-token"
+            ><img src="/thumb/linked.png?secure=thumb-token" alt="Duplicate"
+        /></a>
+        <img data-src="/thumb/lazy.png" alt="Lazy image" />
+        <div class="background" style="background-image: url('/thumb/background.png')">
+            Background image
+        </div>
+        <a href="/full/direct.png">Direct image</a>
+        <div id="shadow"></div>
+    </main>
+    <script src="/fixtures/gallery.js"></script>
+</html>

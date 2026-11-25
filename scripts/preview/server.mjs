@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import { projectPath } from '../lib/project.mjs';
 import { assets } from './assets.mjs';
 import { renderPreviewDocument } from './document.mjs';
+import { fixturePng } from '../testing/site-fixtures.mjs';
 const headers = (type) => ({
     'Content-Type': type + '; charset=utf-8',
     'Cache-Control': 'no-store',
@@ -12,6 +13,10 @@ export function createPreviewServer(intercept = () => false) {
         const url = new URL(request.url, 'http://127.0.0.1');
         try {
             if (await intercept(request, response, url)) return;
+            if (url.pathname === '/images/thumb/first.jpg') {
+                response.writeHead(200, { 'Content-Type': 'image/png' }).end(fixturePng);
+                return;
+            }
             if (!['GET', 'HEAD'].includes(request.method)) {
                 response.writeHead(405).end('Method not allowed');
                 return;

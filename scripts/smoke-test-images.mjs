@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import http from 'node:http';
+import { createSiteFixtures, fixturePng as png } from './testing/site-fixtures.mjs';
 import webExt from 'web-ext';
 import { buildRuntimeFixture } from './testing/runtime-fixture.mjs';
 import { projectRoot } from './lib/project.mjs';
@@ -16,10 +17,7 @@ const downloads = path.join(fixture, 'downloads');
 await fs.cp(path.join(projectRoot, 'extension'), sourceDir, { recursive: true });
 await fs.mkdir(profile);
 await fs.mkdir(downloads);
-const png = Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5V8AAAAASUVORK5CYII=',
-    'base64',
-);
+const handleFixture = await createSiteFixtures();
 let resolveReport;
 const completed = new Promise((resolve) => {
     resolveReport = resolve;
@@ -33,23 +31,7 @@ const server = http.createServer(async (request, response) => {
         await fs.writeFile(path.join(fixture, 'report.json'), JSON.stringify(report, null, 2));
         response.end('ok');
         resolveReport(report);
-    } else if (url.pathname === '/page') {
-        response.writeHead(200, { 'Content-Type': 'text/html' })
-            .end(`<!doctype html><title>Image scan test</title>
-            <a href="/full/linked.png?secure=full-token"><span><img src="/thumb/linked.png?secure=thumb-token" alt="Nested link"></span></a>
-            <img src="/thumb/plain.png?secure=unchanged-token" alt="Source only">
-            <a href="/full/linked.png?secure=full-token"><img src="/thumb/linked.png?secure=thumb-token" alt="Duplicate"></a>
-            <img data-src="/thumb/lazy.png" alt="Lazy image">
-            <div style="background-image:url('/thumb/background.png');width:10px;height:10px"></div>
-            <a href="/full/direct.png">Direct image</a>
-            <div id="shadow"></div><script>const shadowImage=document.createElement('img');shadowImage.src='/thumb/shadow.png';document.getElementById('shadow').attachShadow({mode:'open'}).append(shadowImage);</script>`);
-    } else if (
-        /^\/(thumb|full)\/(linked|plain|lazy|background|direct|shadow)\.png$/.test(url.pathname)
-    ) {
-        if (url.pathname === '/full/linked.png' && url.searchParams.get('secure') !== 'full-token')
-            response.writeHead(403).end('Invalid signature');
-        else response.writeHead(200, { 'Content-Type': 'image/png' }).end(png);
-    } else response.writeHead(404).end();
+    } else if (!(await handleFixture(request, response))) response.writeHead(404).end();
 });
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
@@ -59,7 +41,7 @@ async function smoke(base) {
         TestRuntime;
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     try {
-        const tab = await browser.tabs.create({ url: base + '/page' });
+        const tab = await browser.tabs.create({ url: base + '/fixtures/1-gallery' });
         for (let i = 0; i < 100; i++) {
             if ((await browser.tabs.get(tab.id)).status === 'complete') break;
             await delay(50);

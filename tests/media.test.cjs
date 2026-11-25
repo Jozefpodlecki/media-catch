@@ -27,7 +27,13 @@ function setup() {
                 return state.allowed;
             },
         },
-        tabs: { onRemoved: { addListener() {} }, onUpdated: { addListener() {} } },
+        tabs: {
+            async get(id) {
+                return { id, url: 'https://example.com/player' };
+            },
+            onRemoved: { addListener() {} },
+            onUpdated: { addListener() {} },
+        },
         webRequest: {
             onBeforeRequest: {
                 addListener(fn) {

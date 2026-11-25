@@ -73,11 +73,20 @@ also stops the remaining queue. Queue progress reports starts and start failures
 **History** tracks each native completion/interruption separately. A failed file
 does not stop the rest of the batch. Only the latest 100 attempts remain in history.
 
+## Site rules
+
+Use **Site rules** to save per-website network or video/source rules. Choose a
+trigger, URL condition and action, save, then explicitly Preview or Arm the tab.
+Auto converts matching HLS playlists to MP4 and downloads other readable media.
+Navigation and edits to active rules disarm the tab; closing the popup leaves an
+armed background session running. See [the rules guide](rules.md) for setup,
+examples, matching semantics and execution limits.
+
 ## Blobs
 
 The popup uses icon actions with hover/focus tooltips and accessible names. The
 main views are Blobs (download), Images (picture), Media & HLS (video), History
-(clock), and Settings. Custom
+(clock), Site rules, and Settings. Custom
 text fields, a size stepper, and keyboard-operated dropdowns share the same style.
 Use the info icons for limits and explanations. Dropdowns support arrows,
 Home/End, typeahead, Enter, and Escape.

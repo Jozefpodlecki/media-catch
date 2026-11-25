@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fixture 2: HLS to file blob</title>
+    <link rel="stylesheet" href="/fixtures/style.css" />
+    <h1>Fixture 2: HLS to file blob</h1>
+    <p>
+        Enable network, DOM and blob watches before running. JavaScript downloads the playlist and
+        segments, remuxes locally, creates a file blob URL, and updates the video and source DOM.
+    </p>
+    <label>Playlist URL<input id="playlist" value="/fixture.m3u8" /></label>
+    <button id="generate">Generate local one-second HLS</button>
+    <button id="public">Use public Mux test playlist</button>
+    <button id="run">Fetch HLS and create video blob</button>
+    <video id="video" controls muted playsinline></video>
+    <output id="status" role="status">Ready. Generate the local fixture first.</output>
+    <script type="module" src="/fixtures/hls.js"></script>
+</html>

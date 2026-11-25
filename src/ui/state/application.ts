@@ -1,4 +1,4 @@
-export type View = 'blobs' | 'images' | 'media' | 'history' | 'settings';
+export type View = 'blobs' | 'images' | 'media' | 'rules' | 'history' | 'settings';
 export interface ApplicationState {
     view: View;
     dark: boolean;

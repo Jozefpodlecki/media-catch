@@ -1,4 +1,6 @@
+import { createRulesRepository } from '../src/runtime/rules/storage';
 import { createSettingsRepository } from '../src/runtime/settings/repository';
+const previewCommands: string[] = [];
 const previewState = document.documentElement.dataset.previewState;
 type StorageListener = (
     changes: Record<string, { oldValue?: unknown; newValue?: unknown }>,
@@ -27,6 +29,18 @@ const localStorageMock = {
     },
 };
 const preferences = createSettingsRepository(localStorageMock);
+const siteRules = createRulesRepository(localStorageMock);
+const previewSession = window.parent as Window & {
+    mediaCatchRuleSession?: import('../src/shared/rules').RulesRuntimeState;
+};
+const ruleRuntime = (previewSession.mediaCatchRuleSession ??= {
+    armed: false,
+    preview: true,
+    origin: '',
+    actions: 0,
+    pending: 0,
+    log: [],
+});
 const previewTab = { id: 2, url: 'https://example.com/video', title: 'Example video' };
 type PreviewTabListener = (
     id: number,
@@ -55,7 +69,7 @@ const previewImages = [
         id: '0:0',
         frameId: 0,
         src: 'https://cdn.example/images/thumb/first.jpg?secure=thumb-token',
-        currentSrc: 'https://cdn.example/images/thumb/first.jpg?secure=thumb-token',
+        currentSrc: new URL('/images/thumb/first.jpg?secure=thumb-token', location.href).href,
         href: 'https://cdn.example/images/full/first.jpg?secure=full-token',
         alt: 'Linked full-size image',
     },
@@ -63,7 +77,7 @@ const previewImages = [
         id: '0:1',
         frameId: 0,
         src: 'https://cdn.example/images/thumb/second.jpg',
-        currentSrc: 'https://cdn.example/images/thumb/second.jpg',
+        currentSrc: new URL('/images/thumb/missing.jpg', location.href).href,
         href: '',
         alt: 'Image without a link',
     },
@@ -71,7 +85,7 @@ const previewImages = [
         id: '0:2',
         frameId: 0,
         src: 'https://cdn.example/images/thumb/first.jpg?secure=thumb-token',
-        currentSrc: 'https://cdn.example/images/thumb/first.jpg?secure=thumb-token',
+        currentSrc: new URL('/images/thumb/first.jpg?secure=thumb-token', location.href).href,
         href: 'https://cdn.example/images/full/first.jpg?secure=full-token',
         alt: 'Duplicate image',
     },
@@ -138,6 +152,7 @@ const sampleHistory = [
             },
         },
         previewNavigate(url: string) {
+            ruleRuntime.armed = false;
             previewTab.url = url;
             watching = false;
             observing = false;
@@ -168,6 +183,7 @@ const sampleHistory = [
         },
     },
     runtime: {
+        previewCommands,
         getURL(path: string) {
             const page = path.startsWith('index.html')
                 ? path.replace('index.html', 'preview-index.html')
@@ -175,7 +191,40 @@ const sampleHistory = [
             return new URL('/' + page, location.origin).href;
         },
         async sendMessage(message: Record<string, unknown>) {
+            previewCommands.push(String(message.action));
+            if (previewCommands.length > 1000) previewCommands.shift();
             switch (message.action) {
+                case 'rules-get':
+                    return { ok: true, document: await siteRules.get() };
+                case 'rules-save': {
+                    const document = await siteRules.save(
+                        message.origin as string,
+                        message.rule as import('../src/shared/rules').SiteRule,
+                    );
+                    Object.assign(ruleRuntime, { armed: false });
+                    return { ok: true, document };
+                }
+                case 'rules-remove':
+                    Object.assign(ruleRuntime, { armed: false });
+                    return {
+                        ok: true,
+                        document: await siteRules.remove(
+                            message.origin as string,
+                            message.id as string,
+                        ),
+                    };
+                case 'rules-state':
+                    return { ok: true, runtime: ruleRuntime };
+                case 'rules-arm':
+                    Object.assign(ruleRuntime, {
+                        armed: true,
+                        preview: Boolean(message.preview),
+                        origin: new URL(previewTab.url).origin,
+                    });
+                    return { ok: true, runtime: ruleRuntime };
+                case 'rules-disarm':
+                    Object.assign(ruleRuntime, { armed: false });
+                    return { ok: true, runtime: ruleRuntime };
                 case 'images-scan':
                     return { ok: true, images: previewImages, truncated: false };
                 case 'images-state':

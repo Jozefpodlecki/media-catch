@@ -19,6 +19,44 @@ import {
 } from '../.build/ui-state.mjs';
 const initialSiteSettings = createSettingsDocument();
 
+test('internal and extension pages have no capture source and recover when the same tab becomes a website', () => {
+    let state = { tab: null, revision: 0, loading: true, error: '', unavailable: '' };
+    for (const url of [
+        'about:torconnect',
+        'about:addons',
+        'about:blank',
+        'chrome://browser/content/',
+        'moz-extension://test/index.html',
+        'file:///test.html',
+    ]) {
+        state = sourceReducer(state, {
+            type: 'resolved',
+            tab: { id: 2, url, title: 'Browser page' },
+            navigated: true,
+        });
+        assert.equal(state.tab, null);
+        assert.equal(state.error, '');
+        assert.match(state.unavailable, /Open an HTTP\(S\) website/);
+        assert.equal(state.loading, false);
+    }
+    const beforeWebsite = state.revision;
+    state = sourceReducer(state, {
+        type: 'resolved',
+        tab: { id: 2, url: 'https://site.example/player', title: 'Player' },
+        navigated: true,
+    });
+    assert.equal(state.tab.id, 2);
+    assert.equal(state.unavailable, '');
+    assert.equal(state.revision, beforeWebsite + 1);
+    state = sourceReducer(state, {
+        type: 'resolved',
+        tab: { id: 2, url: 'about:torconnect', title: 'Tor connection' },
+        navigated: true,
+    });
+    assert.equal(state.tab, null);
+    assert.equal(state.error, '');
+});
+
 test('source title changes preserve drafts while reload, URL change, and closure reset ownership', () => {
     const tab = { id: 7, url: 'https://example.com/watch', title: 'Player' };
     let state = sourceReducer(

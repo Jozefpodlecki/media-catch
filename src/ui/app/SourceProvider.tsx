@@ -21,6 +21,7 @@ export function SourceProvider({ page, children }: { page: PageDescriptor; child
         revision: 0,
         loading: resolveSource,
         error: '',
+        unavailable: '',
     });
     useEffect(() => {
         if (!resolveSource) return;
@@ -36,8 +37,6 @@ export function SourceProvider({ page, children }: { page: PageDescriptor; child
                         : (await browser.tabs.query({ active: true, currentWindow: true }))[0];
                 if (!active || request !== id) return;
                 if (tab?.id === undefined) throw new Error('Open a source webpage first.');
-                if (!tab.url || tab.url.startsWith(browser.runtime.getURL('')))
-                    throw new Error('Open the extension from the source webpage to grant access.');
                 current = { id: tab.id, url: tab.url || '', title: tab.title || '' };
                 dispatch({ type: 'resolved', tab: current, navigated: false });
             } catch (error) {

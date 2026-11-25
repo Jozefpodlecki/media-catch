@@ -1,3 +1,4 @@
+import type { RulesDocument, RulesRuntimeState } from '../shared/rules';
 import type { ImageCandidate, ImageBatch } from '../shared/images';
 import type { Attempt, HookDiagnostic, MediaObservation } from '../shared/contracts';
 import type { CommandPayloads, MediaCommand } from '../shared/messages';
@@ -5,6 +6,12 @@ import type { Variant } from '../hls/playlist';
 import type { SettingsDocument } from '../shared/settings';
 
 type CommandResults = {
+    'rules-get': { document: RulesDocument };
+    'rules-save': { document: RulesDocument };
+    'rules-remove': { document: RulesDocument };
+    'rules-arm': { runtime: RulesRuntimeState };
+    'rules-disarm': { runtime: RulesRuntimeState };
+    'rules-state': { runtime: RulesRuntimeState };
     'images-scan': { images: ImageCandidate[]; truncated: boolean };
     'images-state': { batch: ImageBatch | null };
     'images-stop': { batch: ImageBatch | null };

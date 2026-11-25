@@ -32,7 +32,7 @@ function setup() {
         },
         tabs: {
             async get(id) {
-                return { id, incognito: true, url: 'https://example.com/source' };
+                return { id, incognito: true, url: state.tabUrl || 'https://example.com/source' };
             },
             onRemoved: {
                 addListener(fn) {
@@ -97,13 +97,13 @@ function setup() {
         setTimeout,
         clearTimeout,
         crypto: require('node:crypto').webcrypto,
-        URL: {
-            createObjectURL() {
+        URL: class extends URL {
+            static createObjectURL() {
                 return 'blob:extension/test';
-            },
-            revokeObjectURL(url) {
+            }
+            static revokeObjectURL(url) {
                 state.revoked.push(url);
-            },
+            }
         },
         location: { href: 'https://example.com/' },
         document: {
@@ -453,4 +453,16 @@ test('clearing history during a blob read does not resurrect the in-flight attem
     assert.equal((await attempt).ok, true);
     state.changed({ id: 7, state: { current: 'complete' } });
     assert.equal((await state.send({ action: 'history-get' })).entries.length, 0);
+});
+
+test('browser and extension pages reject capture before injection while history remains available', async () => {
+    const state = setup();
+    for (const tabUrl of ['about:torconnect', 'about:addons', 'moz-extension://test/index.html']) {
+        state.tabUrl = tabUrl;
+        const response = await state.send({ action: 'scan', tabId: 2 });
+        assert.equal(response.ok, false);
+        assert.match(response.error, /Open an HTTP\(S\) website/);
+        assert.equal(state.lastTarget, undefined);
+        assert.equal((await state.send({ action: 'history-get' })).ok, true);
+    }
 });

@@ -6,6 +6,124 @@ import path from 'node:path';
 import { runOptions, startSession, stopSession } from '../scripts/dev-session.mjs';
 import { allowDevelopmentExtension } from '../scripts/allow-extension.mjs';
 import { claimSession, releaseSession } from '../scripts/session/store.mjs';
+import vm from 'node:vm';
+import { configureTemporaryAddonPermissions } from '../scripts/browser/addon-permissions.mjs';
+
+function addonSetupFixture({
+    temporary = true,
+    pinned = false,
+    blocked = false,
+    modernImport = false,
+} = {}) {
+    const placements = new Map([
+        ['other-addon-browser-action', { area: 'nav-bar', position: 2 }],
+        [
+            'blob-url-downloader_local_invalid-browser-action',
+            { area: pinned ? 'nav-bar' : 'unified-extensions-area', position: 3 },
+        ],
+    ]);
+    const calls = [];
+    const CustomizableUI = {
+        AREA_NAVBAR: 'nav-bar',
+        getPlacementOfWidget: (id) => placements.get(id),
+        addWidgetToArea(id, area) {
+            calls.push(['pin', id, area]);
+            if (!blocked) placements.set(id, { area, position: 3 });
+        },
+    };
+    const modules = {
+        'resource://gre/modules/AddonManager.sys.mjs': {
+            AddonManager: {
+                async getAddonByID() {
+                    return {
+                        temporarilyInstalled: temporary,
+                        async reload() {
+                            calls.push(['reload']);
+                        },
+                    };
+                },
+            },
+        },
+        'resource://gre/modules/ExtensionPermissions.sys.mjs': {
+            ExtensionPermissions: {
+                async add(id, permissions) {
+                    calls.push(['permissions', id, permissions]);
+                },
+            },
+            QuarantinedDomains: {
+                setUserAllowedAddonIdPref(id, value) {
+                    calls.push(['restricted', id, value]);
+                },
+            },
+        },
+        'resource://gre/modules/ExtensionParent.sys.mjs': {
+            ExtensionParent: {
+                WebExtensionPolicy: {
+                    getByID: () => ({ privateBrowsingAllowed: true, ignoreQuarantine: true }),
+                },
+            },
+        },
+        [modernImport
+            ? 'moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs'
+            : 'resource:///modules/CustomizableUI.sys.mjs']: { CustomizableUI },
+    };
+    const configure = vm.runInNewContext(`(${configureTemporaryAddonPermissions.toString()})`, {
+        ChromeUtils: {
+            importESModule(uri) {
+                if (!modules[uri]) throw new Error('Module unavailable');
+                return modules[uri];
+            },
+        },
+    });
+    return {
+        calls,
+        placements,
+        configure: async (apply = true) =>
+            JSON.parse(await configure({ id: 'blob-url-downloader@local.invalid', apply })),
+    };
+}
+
+test('temporary add-on setup pins only its toolbar button after reload and preserves other add-ons', async () => {
+    for (const modernImport of [false, true]) {
+        const fixture = addonSetupFixture({ modernImport });
+        const result = await fixture.configure();
+        assert.equal(result.toolbarPinned, true);
+        assert.equal(result.privateWindows, true);
+        assert.equal(result.restrictedSites, true);
+        assert.equal(
+            fixture.calls.findIndex(([type]) => type === 'pin') >
+                fixture.calls.findIndex(([type]) => type === 'reload'),
+            true,
+        );
+        assert.deepEqual(fixture.placements.get('other-addon-browser-action'), {
+            area: 'nav-bar',
+            position: 2,
+        });
+        assert.deepEqual(
+            fixture.calls.find(([type]) => type === 'pin'),
+            ['pin', 'blob-url-downloader_local_invalid-browser-action', 'nav-bar'],
+        );
+    }
+});
+
+test('toolbar verification is read-only and already pinned buttons are not moved', async () => {
+    const fixture = addonSetupFixture();
+    assert.equal((await fixture.configure(false)).toolbarPinned, false);
+    assert.deepEqual(fixture.calls, []);
+    const pinned = addonSetupFixture({ pinned: true });
+    await pinned.configure();
+    assert.equal(
+        pinned.calls.some(([type]) => type === 'pin'),
+        false,
+    );
+});
+
+test('pin failures are explicit and permanent add-ons are never modified', async () => {
+    await assert.rejects(addonSetupFixture({ blocked: true }).configure(), /could not pin/);
+    const permanent = addonSetupFixture({ temporary: false });
+    await assert.rejects(permanent.configure(), /non-temporary/);
+    assert.deepEqual(permanent.calls, []);
+});
 
 test('development session uses a copied profile and supports targeted removal', async (t) => {
     const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'blob-session-test-'));

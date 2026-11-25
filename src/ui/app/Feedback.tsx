@@ -23,6 +23,12 @@ export function Feedback() {
     return (
         <>
             {' '}
+            {source.unavailable && view !== 'settings' && view !== 'history' && (
+                <div className="notice" role="status">
+                    <Icon name="info" />
+                    <span>{source.unavailable}</span>
+                </div>
+            )}
             {error && (
                 <div className="notice notice-error" role="alert">
                     <Icon name="info" />

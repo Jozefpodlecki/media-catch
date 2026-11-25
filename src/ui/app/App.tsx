@@ -1,3 +1,4 @@
+import { RulesView } from '../features/rules/RulesView';
 import { ImagesView } from '../features/images/ImagesView';
 import { useApplicationState } from './ApplicationProvider';
 import { AppHeader } from './AppHeader';
@@ -14,6 +15,16 @@ export function App({ page }: { page: PageDescriptor }) {
     const dashboard = page.mode === 'dashboard';
     const source = useSource();
     const { view } = useApplicationState();
+    const captureView =
+        view === 'blobs' ? (
+            <BlobsView />
+        ) : view === 'images' ? (
+            <ImagesView />
+        ) : view === 'rules' ? (
+            <RulesView />
+        ) : view === 'media' ? (
+            <MediaView />
+        ) : null;
     return (
         <div
             className={
@@ -32,6 +43,7 @@ export function App({ page }: { page: PageDescriptor }) {
                 {dashboard &&
                     !source.tab &&
                     !source.loading &&
+                    !source.unavailable &&
                     view !== 'settings' &&
                     view !== 'history' && (
                         <p className="source-hint">
@@ -39,9 +51,18 @@ export function App({ page }: { page: PageDescriptor }) {
                             that tab.
                         </p>
                     )}
-                {view === 'blobs' && <BlobsView />}
-                {view === 'images' && <ImagesView />}
-                {view === 'media' && <MediaView />}
+                {captureView &&
+                    (source.tab ? (
+                        captureView
+                    ) : (
+                        <fieldset
+                            disabled
+                            className="contents [&_input]:cursor-not-allowed [&_input]:opacity-50"
+                            aria-label="Page capture unavailable"
+                        >
+                            {captureView}
+                        </fieldset>
+                    ))}
                 {view === 'history' && <HistoryView fullHistory={fullHistory} />}
                 {view === 'settings' && <SettingsView />}
             </main>

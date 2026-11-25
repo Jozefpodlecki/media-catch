@@ -7,6 +7,7 @@ export async function buildRuntimeFixture(directory) {
         stdin: {
             contents: `import './src/background';
 export { startBlobWatch, stopBlobWatch, inspectBlobWatch, testWatchedHooks } from './src/auto-watch';
+export { armRules, disarmRules, rulesState, ruleRepository } from './src/runtime/rules/engine';
 export { getAttemptHistory } from './src/runtime/history';
 export { scanImages, startImageBatch, imageBatchState, stopImageBatch } from './src/runtime/images';
 export { transformImageUrl } from './src/shared/images';

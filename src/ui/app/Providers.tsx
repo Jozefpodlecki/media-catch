@@ -1,3 +1,4 @@
+import { RulesProvider } from '../features/rules/RulesProvider';
 import { ImagesProvider } from '../features/images/ImagesProvider';
 import type { ReactNode } from 'react';
 import type { ApplicationState } from '../state/application';
@@ -17,7 +18,9 @@ function Workspace({ children }: { children: ReactNode }) {
             <BlobProvider>
                 <MediaProvider>
                     <ImagesProvider>
-                        <HistoryProvider>{children}</HistoryProvider>
+                        <RulesProvider>
+                            <HistoryProvider>{children}</HistoryProvider>
+                        </RulesProvider>
                     </ImagesProvider>
                 </MediaProvider>
             </BlobProvider>

@@ -14,6 +14,7 @@ export const labels: Record<string, string> = {
 };
 export const modeLabels: Record<string, string> = {
     manual: 'Manual',
+    rule: 'Rule download',
     image: 'Image',
     automatic: 'Automatic',
     hls: 'HLS → MP4',

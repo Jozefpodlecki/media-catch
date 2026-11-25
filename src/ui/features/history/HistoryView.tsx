@@ -88,6 +88,7 @@ export function HistoryView({ fullHistory }: { fullHistory: boolean }) {
                                 </time>
                                 <span>{size(item.size)}</span>
                                 <span>{modeLabels[item.mode] || item.mode}</span>
+                                {item.rule && <span>Rule: {item.rule}</span>}
                             </p>
                             {item.message && item.state !== 'complete' && (
                                 <p

@@ -1,4 +1,5 @@
 import type { Attempt } from '../shared/contracts';
+import { redactRuleUrl } from '../shared/rules';
 import type { CommandOf } from '../shared/messages';
 import { safeFilename } from '../shared/filename';
 import { blobLimit } from '../shared/limits';
@@ -40,7 +41,7 @@ export async function scanTab(tabId: number) {
     return { ok: true, frames };
 }
 
-export async function downloadBlob(message: CommandOf<'download'>) {
+export async function downloadBlob(message: CommandOf<'download'>, rule?: string) {
     if (pendingTabs.has(message.tabId))
         throw new Error('A download attempt is already running for this tab.');
     if (typeof message.url !== 'string' || !message.url.startsWith('blob:')) {
@@ -48,15 +49,23 @@ export async function downloadBlob(message: CommandOf<'download'>) {
     }
     pendingTabs.add(message.tabId);
     const entry = beginAttempt(
-        'manual',
+        rule ? 'rule' : 'manual',
         message.tabId,
         message.frameId,
         message.url,
         message.filename,
     );
+    if (rule) {
+        entry.rule = rule.slice(0, 80);
+        entry.url = redactRuleUrl(message.url);
+    }
     try {
         const tab = await browser.tabs.get(message.tabId);
-        entry.sourcePage = typeof tab.url === 'string' ? tab.url.slice(0, 2000) : '';
+        entry.sourcePage = rule
+            ? redactRuleUrl(tab.url || '')
+            : typeof tab.url === 'string'
+              ? tab.url.slice(0, 2000)
+              : '';
         const results = await browser.scripting.executeScript({
             target: { tabId: message.tabId, frameIds: [message.frameId] },
             world: 'MAIN',
@@ -72,7 +81,7 @@ export async function downloadBlob(message: CommandOf<'download'>) {
             );
         }
         const blob = await decodeBlobData(result.dataUrl);
-        return await saveBlob(blob, tab, message.filename, true, entry);
+        return await saveBlob(blob, tab, message.filename, !rule, entry);
     } catch (error) {
         failAttempt(entry, error);
         throw error;

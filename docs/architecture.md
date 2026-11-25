@@ -85,6 +85,10 @@ responsive width override for embedded/narrow tests; it does not ship in the
 runtime. Verify native panel sizing with `scripts/smoke-test-popup.mjs` as well as
 the preview-based UI checks.
 
+Per-site automation uses validated internal events and explicitly armed tab
+sessions. Its storage, queue, observer ownership and action contracts are detailed
+in [the rules guide](rules.md).
+
 ## Build and entry pages
 
 `scripts/build.mjs` invokes implementations in `scripts/build/`. Strict type

@@ -1,6 +1,13 @@
 import type { MediaObservation } from '../shared/contracts';
-export function configureMediaObserver(config: { enabled: boolean; token?: string }) {
-    globalThis.__mediaObserver?.stop();
+export function configureMediaObserver(config: {
+    enabled: boolean;
+    token?: string;
+    scope?: 'manual' | 'rules';
+}) {
+    const key = config.scope === 'rules' ? '__mediaRuleObserver' : '__mediaObserver';
+    if (!config.enabled && config.token && globalThis[key]?.token !== config.token)
+        return { enabled: false };
+    globalThis[key]?.stop();
     if (!config.enabled) return { enabled: false };
     let sent = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -66,9 +73,9 @@ export function configureMediaObserver(config: { enabled: boolean; token?: strin
         for (const type of ['loadstart', 'loadedmetadata', 'emptied'])
             document.removeEventListener(type, onMedia, true);
         window.removeEventListener('pagehide', stop);
-        globalThis.__mediaObserver = undefined;
+        globalThis[key] = undefined;
     };
-    globalThis.__mediaObserver = { stop };
+    globalThis[key] = { stop, token: config.token };
     window.addEventListener('pagehide', stop, { once: true });
     scan(document, 'existing');
     return { enabled: true };

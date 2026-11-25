@@ -1,4 +1,5 @@
 import type { Attempt } from '../../shared/contracts';
+import { redactRuleUrl } from '../../shared/rules';
 import type { ConversionCommand } from '../../shared/messages';
 import { blobLimit } from '../../shared/limits';
 import { safeFilename } from '../../shared/filename';
@@ -10,7 +11,7 @@ import * as HlsConverter from '../../hls/converter';
 let conversion:
     { tabId: number; running: boolean; controller: AbortController; entry: Attempt } | undefined;
 
-export function startConversion(message: ConversionCommand, kind: 'hls' | 'blob') {
+export function startConversion(message: ConversionCommand, kind: 'hls' | 'blob', rule?: string) {
     if (conversion?.running)
         throw new Error('A conversion is already running. Wait or cancel it first.');
     if (kind === 'hls') HlsConverter.mediaUrl(message.url);
@@ -25,6 +26,10 @@ export function startConversion(message: ConversionCommand, kind: 'hls' | 'blob'
         message.url,
         message.filename || 'media.mp4',
     );
+    if (rule) {
+        entry.rule = rule.slice(0, 80);
+        entry.url = redactRuleUrl(message.url);
+    }
     const job = { tabId: message.tabId, running: true, controller: new AbortController(), entry };
     conversion = job;
     void (async () => {
@@ -36,7 +41,7 @@ export function startConversion(message: ConversionCommand, kind: 'hls' | 'blob'
         };
         try {
             const tab = await browser.tabs.get(message.tabId);
-            entry.sourcePage = tab.url?.slice(0, 2000) || '';
+            entry.sourcePage = rule ? redactRuleUrl(tab.url || '') : tab.url?.slice(0, 2000) || '';
             let files: { name: string; data: Uint8Array }[];
             let video: string;
             let audio: string | undefined;

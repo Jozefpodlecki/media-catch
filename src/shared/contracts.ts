@@ -13,6 +13,7 @@ export interface HookDiagnostic {
     lastSize: number | null;
 }
 export interface Attempt {
+    rule?: string;
     id: number;
     mode: string;
     tabId: number;

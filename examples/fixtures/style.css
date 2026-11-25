@@ -1,0 +1,47 @@
+:root {
+    color-scheme: light dark;
+    font-family: system-ui, sans-serif;
+}
+body {
+    max-width: 900px;
+    margin: 32px auto;
+    padding: 0 16px;
+}
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+}
+.gallery img,
+.background {
+    width: 160px;
+    height: 120px;
+    object-fit: contain;
+    border: 1px solid gray;
+}
+.background {
+    background-size: cover;
+}
+label,
+video,
+output {
+    display: block;
+    margin: 16px 0;
+}
+input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 8px;
+}
+button {
+    padding: 10px;
+    margin: 4px;
+}
+video {
+    width: 100%;
+    max-height: 400px;
+}
+output {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}

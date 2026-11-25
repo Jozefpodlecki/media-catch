@@ -45,7 +45,8 @@ Use `-BrowserPath` and `-ProfilePath` to override the installation. The session
 copies the profile and uses web-ext with `keepProfileChanges: false`; it starts
 on `about:addons`. A helper tied to the pinned web-ext debugger transport applies
 and verifies Allow for private windows and restricted sites for this temporary
-add-on only. Failure must be reported rather than disabling global protections.
+add-on only. It also pins Media Catch to the navigation toolbar in the copied
+profile and verifies the placement. Failure stops the development session.
 Optional media host access still requires Firefox's permissions UI.
 
 Keep the terminal open. After editing source, `npm run compile` updates the
@@ -80,6 +81,8 @@ node scripts/smoke-test-popup.mjs --browser 'C:\Program Files\Mozilla Firefox\fi
 The hook check verifies capture and exclusions with a real 11 MiB download. The
 media check generates a one-second HLS fixture, tests network and DOM discovery,
 HLS/file-blob MP4 output, encryption rejection and stalled-request cancellation.
+It also verifies rule preview, network-triggered HLS conversion, DOM-triggered
+file-blob download, duplicate suppression and manual observer isolation.
 Inspect actual native output paths, MP4 headers and sizes rather than relying
 only on input size metadata in history.
 
@@ -94,10 +97,10 @@ keyboard controls, accessible names, focus, history operations and overflow, and
 saves a report/screenshot. It does not verify real downloads. Reports, fresh
 profiles and output files stay under `artifacts/`.
 
-The popup check opens the actual temporary add-on through the browser's Extensions
-menu and measures the native content viewport, requiring the intended 400px
-width. It uses a fresh copied test profile and only the documented per-add-on
-private/restricted-site settings. Run it separately with the Tor executable to
+The popup check verifies that the temporary add-on is visibly pinned to the
+navigation toolbar, opens it there, and measures the native content viewport,
+requiring the intended 400px width. It uses a fresh copied test profile and only
+the documented per-add-on setup. Run it separately with the Tor executable to
 verify Tor popup sizing; it does not test Tor website behavior. Preview iframe
 checks cannot detect the native popup's content/viewport sizing loop.
 
@@ -111,6 +114,27 @@ Report Node, Firefox UI, Firefox media/hook and Tor/site results separately.
 Passing one layer does not establish the others.
 
 ## Visual preview
+
+Run `npm run fixtures` for reusable browser/E2E pages on localhost port 8001:
+
+- `/fixtures/1-gallery`: linked and duplicate images, signed URLs, lazy sources,
+  CSS background, direct image link and an open shadow root. The image smoke
+  test uses this same page and verifies six native PNG downloads byte-for-byte.
+- `/fixtures/2-hls`: generate a one-second local HLS clip, enable the extension's
+  network/DOM/blob watches, then fetch HLS and create a video blob. Page JavaScript
+  fetches the playlist and segments, remuxes with the local packaged FFmpeg core,
+  creates an MP4 file blob, and updates both video and source elements. The media
+  smoke test uses this flow and verifies native HLS and blob MP4 downloads.
+
+The HLS page also offers [Mux's public test stream](https://test-streams.mux.dev/)
+at `https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8`. This online option uses the
+lowest quality's first two segments to keep the sample small. It requires working
+internet/CORS and is separate from deterministic local E2E checks. Media fetching
+and remuxing happen in the browser. Fixtures and their upload routes never ship.
+
+Image results show the original scanned source as a thumbnail, independently of
+download URL edits. Failed/blocked previews show “Preview unavailable”; download
+URLs remain editable. Thumbnail requests omit the referrer.
 
 `npm run preview` serves `http://127.0.0.1:8000`. Use
 `/preview-popup.html#media` for media and `/preview-history.html` for history.

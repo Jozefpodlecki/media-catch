@@ -1,3 +1,6 @@
+import { registerRulesRuntime } from './runtime/rules/engine';
+import { handleRulesCommand } from './runtime/rules/commands';
+import { siteKeyForUrl } from './shared/settings';
 import { parseExtensionCommand, parsePageCommand, type ExtensionCommand } from './shared/messages';
 import { errorMessage } from './shared/errors';
 import { scanTab, downloadBlob, registerDownloadEvents } from './runtime/downloads';
@@ -22,13 +25,44 @@ import {
     registerImageEvents,
 } from './runtime/images';
 
+registerRulesRuntime();
 registerImageEvents();
 registerDownloadEvents();
 registerBlobWatchEvents();
 registerMediaEvents();
 
 async function handleCommand(message: ExtensionCommand) {
+    const requiresSource = [
+        'scan',
+        'download',
+        'images-scan',
+        'images-download',
+        'watch-start',
+        'watch-test',
+        'network-start',
+        'elements-start',
+        'hls-start',
+        'blob-remux',
+    ];
+    if (
+        'tabId' in message &&
+        message.tabId !== undefined &&
+        requiresSource.includes(message.action)
+    ) {
+        const tab = await browser.tabs.get(message.tabId);
+        if (!siteKeyForUrl(tab.url || ''))
+            throw new Error(
+                'Open an HTTP(S) website before capturing media. Browser and extension pages cannot be scanned.',
+            );
+    }
     switch (message.action) {
+        case 'rules-get':
+        case 'rules-save':
+        case 'rules-remove':
+        case 'rules-arm':
+        case 'rules-disarm':
+        case 'rules-state':
+            return handleRulesCommand(message);
         case 'images-scan':
             return scanImages(message.tabId);
         case 'images-state':

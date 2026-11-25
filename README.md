@@ -23,13 +23,20 @@ then run:
 powershell -NoProfile -File scripts/Install-Extension.ps1
 ```
 
-The installer compiles the extension and launches a temporary copied profile.
+The installer compiles the extension, launches a temporary copied profile, and
+pins Media Catch to its toolbar.
 See [development](docs/development.md) for browser paths, manual loading, removal,
 and verification. Builds are unsigned development packages.
+
+Run `npm run fixtures` for the image gallery at
+`http://127.0.0.1:8001/fixtures/1-gallery` and the JavaScript HLS-to-blob video
+fixture at `http://127.0.0.1:8001/fixtures/2-hls`. The same pages power the browser
+E2E checks. The video fixture supports a generated local clip and a public Mux sample.
 
 ## Documentation
 
 - [Usage](docs/usage.md): images, blobs, HLS, history, and settings.
+- [Site rules](docs/rules.md): network/DOM triggers and automatic media actions.
 - [Development](docs/development.md): setup, commands, tests, and packaging.
 - [Architecture](docs/architecture.md): modules and execution boundaries.
 - [State management](docs/state-management.md): ownership and async updates.

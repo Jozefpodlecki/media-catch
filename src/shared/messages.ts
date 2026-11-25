@@ -1,9 +1,16 @@
+import type { SiteRule } from './rules';
 import { imageLimit } from './images';
 import type { SiteSettings } from './settings';
 type TabRequest = { tabId: number };
 type FileRequest = TabRequest & { url: string; frameId: number; filename?: string };
 
 export interface CommandPayloads {
+    'rules-get': Record<never, never>;
+    'rules-save': { origin: string; rule: SiteRule };
+    'rules-remove': { origin: string; id: string };
+    'rules-arm': TabRequest & { preview: boolean };
+    'rules-disarm': TabRequest;
+    'rules-state': TabRequest;
     'settings-get': Record<never, never>;
     'settings-update': { siteKey: string; patch: Partial<SiteSettings> };
     'settings-reset': { siteKey: string };
@@ -85,6 +92,17 @@ const isFileRequest = (value: Record<string, unknown>) =>
     hasTab(value) && hasUrl(value) && isId(value.frameId) && hasFilename(value);
 
 const validators: Record<CommandAction, (value: Record<string, unknown>) => boolean> = {
+    'rules-get': () => true,
+    'rules-save': (value) =>
+        typeof value.origin === 'string' && value.origin.length <= 2048 && isRecord(value.rule),
+    'rules-remove': (value) =>
+        typeof value.origin === 'string' &&
+        value.origin.length <= 2048 &&
+        typeof value.id === 'string' &&
+        value.id.length <= 64,
+    'rules-arm': (value) => hasTab(value) && typeof value.preview === 'boolean',
+    'rules-disarm': hasTab,
+    'rules-state': hasTab,
     'settings-get': () => true,
     'settings-update': (value) => typeof value.siteKey === 'string' && isRecord(value.patch),
     'settings-reset': (value) => typeof value.siteKey === 'string',

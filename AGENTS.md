@@ -74,7 +74,7 @@ Temporary builds disappear with the session; permanent distribution requires a
 separately signed XPI. Do not sign or publish without an explicit request.
 
 Start on about:addons. The user requested automatic Allow for private windows
-and sites with restrictions. Apply only these per-addon choices to our temporary
+and sites with restrictions, plus toolbar pinning. Apply only these per-addon choices to our temporary
 add-on in the copied profile through the local development debugger. Verify both,
 fail clearly on failure, and never globally disable domain protections. The helper
 is tied to the pinned web-ext transport. Optional media host access is separate
@@ -181,8 +181,10 @@ Polling must not replace form drafts, inspected quality choices, or history filt
 Keep settings/ above the source workspace. Defaults plus partial overrides are
 keyed by normalized HTTP(S) origin, with paths/query/fragment excluded. Forms and
 task state reset on source navigation; site preferences survive within the open UI.
-They are currently in memory only and disappear when the UI closes. Persistence,
-settings UI, storage permission, and retention rules are future explicit changes.
+Site preferences are persisted in browser.storage.local with a versioned schema;
+siteRules.v1 separately stores validated per-origin automation rules. Armed rule
+sessions, activity, discovered URLs and payloads remain in memory. Rules require
+explicit per-tab preview/arming, and navigation or saved rule changes disarm them.
 Do not silently persist site browsing data or auto-start monitoring on navigation.
 Cover reducer transitions, stale replies, overlapping tasks, and site isolation
 with behavioral tests. Preview source navigation is mock-only and never ships.

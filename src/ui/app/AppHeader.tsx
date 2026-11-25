@@ -12,9 +12,9 @@ export function AppHeader({
 }) {
     const { view: pane, dark } = useApplicationState();
     const application = useApplicationActions();
-    const { tab } = useSource();
+    const { tab, loading, unavailable } = useSource();
     const openDashboard = useDashboardActions();
-    const views = ['blobs', 'images', 'media', 'history', 'settings'] as const;
+    const views = ['blobs', 'images', 'media', 'rules', 'history', 'settings'] as const;
     return (
         <>
             <header className="app-header">
@@ -25,9 +25,13 @@ export function AppHeader({
                         <span title={tab?.url}>
                             {tab
                                 ? urlLabel(tab.url) || 'Current tab'
-                                : dashboard
-                                  ? 'Website preferences & downloads'
-                                  : 'Connecting…'}
+                                : unavailable
+                                  ? 'Open a website to capture media'
+                                  : dashboard
+                                    ? 'Website preferences & downloads'
+                                    : loading
+                                      ? 'Connecting…'
+                                      : 'No source website'}
                         </span>
                     )}
                 </div>
@@ -74,9 +78,11 @@ export function AppHeader({
                                       ? 'Images'
                                       : value === 'media'
                                         ? 'Media & HLS'
-                                        : value === 'history'
-                                          ? 'History'
-                                          : 'Website settings'
+                                        : value === 'rules'
+                                          ? 'Site rules'
+                                          : value === 'history'
+                                            ? 'History'
+                                            : 'Website settings'
                             }
                             pressed={pane === value}
                             onClick={() => application.selectView(value)}

@@ -2,6 +2,7 @@ import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'reac
 import { createPortal } from 'react-dom';
 
 const paths = {
+    rules: 'M4 5h16M4 12h16M4 19h16M8 2v6m8 1v6m-8 1v6',
     image: 'M3 3h18v18H3zM3 17l6-6 4 4 3-3 5 5M16 7h.01',
     settings:
         'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2-5h4l1 3 3 1 3 3v4l-3 1-1 3-3 3h-4l-1-3-3-1-3-3v-4l3-1 1-3 3-3Z',

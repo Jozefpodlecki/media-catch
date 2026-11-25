@@ -103,8 +103,28 @@ try {
 } finally {
     connection?.client.disconnect();
     if (runner) {
-        const closed = new Promise((resolve) => runner.registerCleanup(resolve));
+        const desktop = runner.extensionRunners.find(
+            (item) => item.getName() === 'Firefox Desktop',
+        );
+        const child = desktop?.runningInfo?.firefox;
+        const exited =
+            child && child.exitCode === null && child.signalCode === null
+                ? new Promise((resolve) => child.once('exit', resolve))
+                : Promise.resolve();
+        const closed = child
+            ? new Promise((resolve) => child.once('close', resolve))
+            : Promise.resolve();
         await runner.exit();
-        await closed;
+        await exited;
+        let timeout;
+        await Promise.race([
+            closed,
+            new Promise((resolve) => {
+                timeout = setTimeout(resolve, 2000);
+            }),
+        ]);
+        clearTimeout(timeout);
+        child?.stdout?.destroy();
+        child?.stderr?.destroy();
     }
 }
